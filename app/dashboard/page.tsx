@@ -1,58 +1,65 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui";
+import { buttonClass, Card } from "@/components/ui";
+import { DeleteButton } from "@/components/delete-button";
+import { deleteSchoolYear } from "@/actions/school-years";
+import type { SchoolYear } from "@/types/domain";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("school_years")
+    .select("*")
+    .order("created_at", { ascending: true });
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, created_at")
-    .eq("id", user!.id)
-    .single();
-
-  const displayName = profile?.full_name || user?.email;
+  if (error) throw new Error(error.message);
+  const years = (data ?? []) as SchoolYear[];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-gray-500">
-          Welcome back, {displayName}.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">School Years</h1>
+          <p className="text-sm text-gray-500">
+            Organize your studies by grade or year.
+          </p>
+        </div>
+        <Link href="/dashboard/years/new" className={buttonClass("primary")}>
+          + New school year
+        </Link>
       </div>
 
-      <Card>
-        <h2 className="mb-2 font-medium">Your account</h2>
-        <dl className="space-y-1 text-sm">
-          <div className="flex gap-2">
-            <dt className="text-gray-500">Email:</dt>
-            <dd>{user?.email}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="text-gray-500">Name:</dt>
-            <dd>{profile?.full_name ?? "—"}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="text-gray-500">Member since:</dt>
-            <dd>
-              {profile?.created_at
-                ? new Date(profile.created_at).toLocaleDateString()
-                : "—"}
-            </dd>
-          </div>
-        </dl>
-      </Card>
-
-      <Card>
-        <h2 className="mb-1 font-medium">Coming soon</h2>
-        <p className="text-sm text-gray-500">
-          School years, subjects, study materials and AI practice tools will
-          live here in future phases.
-        </p>
-      </Card>
+      {years.length === 0 ? (
+        <Card>
+          <p className="text-sm text-gray-500">
+            No school years yet. Create your first one to get started.
+          </p>
+        </Card>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {years.map((year) => (
+            <li key={year.id}>
+              <Card className="flex items-center justify-between">
+                <Link
+                  href={`/dashboard/years/${year.id}`}
+                  className="font-medium hover:underline"
+                >
+                  {year.name}
+                </Link>
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={`/dashboard/years/${year.id}/edit`}
+                    className={buttonClass("ghost")}
+                  >
+                    Edit
+                  </Link>
+                  <DeleteButton action={deleteSchoolYear} fields={{ id: year.id }} />
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

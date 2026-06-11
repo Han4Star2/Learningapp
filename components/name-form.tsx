@@ -4,17 +4,19 @@ import { useActionState } from "react";
 import { Button, Input } from "./ui";
 import type { FormState } from "@/types/domain";
 
-/** Create or edit a school year. Reused by the `new` and `edit` routes. */
-export function YearForm({
+/** Single-field create/rename form (subjects, teachers). */
+export function NameForm({
   action,
+  placeholder,
+  submitLabel,
   id,
   initialName = "",
-  submitLabel,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
+  placeholder: string;
+  submitLabel: string;
   id?: string;
   initialName?: string;
-  submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     action,
@@ -22,23 +24,14 @@ export function YearForm({
   );
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="flex flex-wrap items-start gap-2">
       {id && <input type="hidden" name="id" value={id} />}
-      <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600">
-          Name
-        </label>
-        <Input
-          name="name"
-          defaultValue={initialName}
-          placeholder="e.g. Grade 9"
-          required
-          autoFocus
-        />
+      <div className="flex-1 min-w-[200px]">
+        <Input name="name" defaultValue={initialName} placeholder={placeholder} required />
+        {state?.error && (
+          <p className="mt-1 text-sm text-red-600">{state.error}</p>
+        )}
       </div>
-
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-
       <Button type="submit" disabled={pending}>
         {pending ? "Saving…" : submitLabel}
       </Button>

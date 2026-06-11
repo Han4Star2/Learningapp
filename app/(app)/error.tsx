@@ -2,7 +2,7 @@
 
 import { Button, Card } from "@/components/ui";
 
-export default function DashboardError({
+export default function AppError({
   error,
   reset,
 }: {

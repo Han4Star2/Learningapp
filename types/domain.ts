@@ -1,15 +1,44 @@
-export type SchoolYear = {
+export type Subject = {
   id: string;
   user_id: string;
   name: string;
   created_at: string;
 };
 
-export type Subject = {
+export type Teacher = {
   id: string;
   user_id: string;
-  school_year_id: string;
   name: string;
+  created_at: string;
+};
+
+export const DOCUMENT_TYPES = ["exam", "notes", "worksheet", "textbook"] as const;
+export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+
+export type StudyDocument = {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  teacher_id: string | null;
+  type: DocumentType;
+  title: string;
+  content: string | null;
+  storage_path: string | null;
+  created_at: string;
+};
+
+export const AI_CONTENT_TYPES = ["exam", "quiz", "flashcards"] as const;
+export type AIContentType = (typeof AI_CONTENT_TYPES)[number];
+
+export type AIGeneratedContent = {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  teacher_id: string | null;
+  type: AIContentType;
+  title: string;
+  content_json: unknown; // narrowed via lib/ai/schemas at render time
+  source_document_ids: string[];
   created_at: string;
 };
 

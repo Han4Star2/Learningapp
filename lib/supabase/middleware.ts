@@ -38,7 +38,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname === "/login" || pathname === "/register";
-  const isProtected = pathname.startsWith("/dashboard");
+  const isProtected =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/subjects") ||
+    pathname.startsWith("/teachers");
 
   // Unauthenticated user hitting a protected route → send to login.
   if (!user && isProtected) {

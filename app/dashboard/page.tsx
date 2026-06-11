@@ -1,78 +1,58 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createSchoolYear, deleteSchoolYear } from "@/actions/school-years";
-import { Button, Card, Input } from "@/components/ui";
-import type { SchoolYear } from "@/types/domain";
+import { Card } from "@/components/ui";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: years } = await supabase
-    .from("school_years")
-    .select("*")
-    .order("level", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const schoolYears = (years ?? []) as SchoolYear[];
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, created_at")
+    .eq("id", user!.id)
+    .single();
+
+  const displayName = profile?.full_name || user?.email;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">School Years</h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
         <p className="text-sm text-gray-500">
-          Organize your studies by grade or year.
+          Welcome back, {displayName}.
         </p>
       </div>
 
       <Card>
-        <form action={createSchoolYear} className="flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[180px]">
-            <label className="mb-1 block text-xs font-medium text-gray-600">
-              Name
-            </label>
-            <Input name="name" placeholder="e.g. Grade 9" required />
+        <h2 className="mb-2 font-medium">Your account</h2>
+        <dl className="space-y-1 text-sm">
+          <div className="flex gap-2">
+            <dt className="text-gray-500">Email:</dt>
+            <dd>{user?.email}</dd>
           </div>
-          <div className="w-24">
-            <label className="mb-1 block text-xs font-medium text-gray-600">
-              Level
-            </label>
-            <Input name="level" type="number" placeholder="9" />
+          <div className="flex gap-2">
+            <dt className="text-gray-500">Name:</dt>
+            <dd>{profile?.full_name ?? "—"}</dd>
           </div>
-          <Button type="submit">Add year</Button>
-        </form>
+          <div className="flex gap-2">
+            <dt className="text-gray-500">Member since:</dt>
+            <dd>
+              {profile?.created_at
+                ? new Date(profile.created_at).toLocaleDateString()
+                : "—"}
+            </dd>
+          </div>
+        </dl>
       </Card>
 
-      {schoolYears.length === 0 ? (
-        <p className="text-sm text-gray-500">No school years yet. Add one above.</p>
-      ) : (
-        <ul className="space-y-2">
-          {schoolYears.map((year) => (
-            <li key={year.id}>
-              <Card className="flex items-center justify-between">
-                <Link
-                  href={`/dashboard/years/${year.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {year.name}
-                </Link>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/dashboard/years/${year.id}`}
-                    className="text-sm text-gray-500 hover:underline"
-                  >
-                    View subjects →
-                  </Link>
-                  <form action={deleteSchoolYear}>
-                    <input type="hidden" name="id" value={year.id} />
-                    <Button variant="danger" type="submit">
-                      Delete
-                    </Button>
-                  </form>
-                </div>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Card>
+        <h2 className="mb-1 font-medium">Coming soon</h2>
+        <p className="text-sm text-gray-500">
+          School years, subjects, study materials and AI practice tools will
+          live here in future phases.
+        </p>
+      </Card>
     </div>
   );
 }

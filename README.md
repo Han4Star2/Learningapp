@@ -1,14 +1,14 @@
-# LearningApp — MVP (Phase 0 + Phase 1)
+# LearningApp — Foundation MVP
 
-A minimal, production-clean **Next.js App Router + Supabase** starter:
-email/password auth, a protected dashboard, and CRUD for **school years**
-and **subjects**. No AI, queues, embeddings, or analytics — those are
-later phases.
+Minimal, production-ready **Next.js App Router + Supabase** foundation:
+email/password auth, a protected dashboard, and a single `profiles`
+table. No AI, uploads, queues, or embeddings — those come in later
+phases on top of this base.
 
 ## Stack
 
-- **Next.js 15** (App Router, Server Components, Server Actions, TypeScript)
-- **Supabase** — Postgres + Auth (`@supabase/ssr`)
+- **Next.js 15** — App Router, Server Components, Server Actions, TypeScript
+- **Supabase** — Postgres + Auth via `@supabase/ssr` (cookie sessions)
 - **Tailwind CSS**
 - Deploys to **Vercel** with zero config
 
@@ -17,85 +17,103 @@ later phases.
 ```
 learningapp/
 ├─ app/
-│  ├─ (auth)/                  # login & register (route group, no /auth prefix)
-│  │  ├─ layout.tsx
+│  ├─ (auth)/                # route group — no /auth URL prefix
+│  │  ├─ layout.tsx          # centered card layout
 │  │  ├─ login/page.tsx
 │  │  └─ register/page.tsx
 │  ├─ dashboard/
-│  │  ├─ layout.tsx            # auth guard + header/logout
-│  │  ├─ page.tsx              # school years CRUD
-│  │  └─ years/[yearId]/page.tsx   # subjects CRUD within a year
+│  │  ├─ layout.tsx          # top bar (user email + logout), auth guard
+│  │  └─ page.tsx            # protected page, reads profile
 │  ├─ globals.css
-│  ├─ layout.tsx
-│  └─ page.tsx                 # redirects to /dashboard or /login
-├─ actions/                    # Server Actions (mutations)
-│  ├─ auth.ts                  # login / register / logout
-│  ├─ school-years.ts          # create / delete
-│  └─ subjects.ts              # create / delete
+│  ├─ layout.tsx             # root layout
+│  └─ page.tsx               # redirects → /dashboard or /login
+├─ actions/
+│  └─ auth.ts                # Server Actions: login / register / logout
 ├─ components/
-│  ├─ clsx.ts
-│  └─ ui.tsx                   # Input / Button / Card
+│  ├─ clsx.ts                # tiny className joiner
+│  └─ ui.tsx                 # Input / Button / Card primitives
 ├─ lib/supabase/
-│  ├─ server.ts                # server-side client (cookies)
-│  ├─ client.ts                # browser client
-│  └─ middleware.ts            # session refresh + route protection
-├─ types/domain.ts
-├─ supabase/migrations/0001_init.sql
-├─ middleware.ts
-└─ (config: next/tsconfig/tailwind/postcss)
+│  ├─ client.ts              # browser client (Client Components)
+│  ├─ server.ts              # server client (RSC / Server Actions)
+│  └─ middleware.ts          # session refresh + route protection
+├─ middleware.ts             # wires updateSession into Next.js
+├─ supabase/migrations/0001_init.sql   # profiles table + RLS + trigger
+├─ .env.example
+└─ (config: package.json, tsconfig, next.config, tailwind, postcss)
 ```
 
-## Setup
+## Database (minimal)
 
-### 1. Create a Supabase project
-At [supabase.com](https://supabase.com) → **New project**. Note the
-**Project URL** and **anon public key** (Project Settings → API).
+One table. Run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql)
+in the Supabase **SQL Editor**:
 
-### 2. Apply the database schema
-In the Supabase dashboard → **SQL Editor**, paste and run the contents of
-[`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-This creates `profiles`, `school_years`, `subjects` with RLS enabled and a
-trigger that auto-creates a profile on signup.
+- `profiles` — `id (uuid, FK auth.users)`, `full_name`, `created_at`
+- **RLS**: users can select/update only their own row
+- **Trigger**: `on_auth_user_created` auto-inserts a profile on signup,
+  copying `full_name` from the signup metadata
+
+## Setup (local)
+
+### 1. Supabase project
+Create one at [supabase.com](https://supabase.com). From
+**Project Settings → API** copy the **Project URL** and **anon public key**.
+
+### 2. Schema
+Open **SQL Editor**, paste `supabase/migrations/0001_init.sql`, run it.
 
 ### 3. (Dev convenience) email confirmation
-For quick local testing, disable email confirmation so signup logs you
-straight in: **Authentication → Providers → Email → turn off "Confirm
-email"**. Leave it on for production.
+**Authentication → Providers → Email → disable "Confirm email"** so
+signup logs you in immediately. Re-enable for production.
 
 ### 4. Environment variables
 ```bash
 cp .env.example .env.local
 ```
-Fill in:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### 5. Install & run
+### 5. Run
 ```bash
 npm install
 npm run dev
 ```
-Open http://localhost:3000 → register → manage school years & subjects.
+http://localhost:3000 → register → you land on the protected dashboard.
 
-## Deploy to Vercel
+## Deploy: GitHub + Vercel
 
-1. Push this repo to GitHub.
-2. Import it at [vercel.com/new](https://vercel.com/new).
-3. Add the two env vars (`NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in **Project → Settings → Environment
-   Variables**.
-4. Deploy. (The anon key is safe to expose to the browser — security is
-   enforced by Supabase RLS, not by hiding the key.)
+### 1. Push to GitHub
+```bash
+git init                     # skip if already a repo
+git add -A
+git commit -m "Foundation MVP"
+git remote add origin https://github.com/YOUR_USER/YOUR_REPO.git
+git push -u origin main
+```
+
+### 2. Import into Vercel
+1. Go to [vercel.com/new](https://vercel.com/new) → **Import** your repo.
+2. Framework preset auto-detects **Next.js** — keep defaults.
+3. Under **Environment Variables**, add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. **Deploy.**
+
+### 3. Point Supabase at your Vercel URL
+In Supabase → **Authentication → URL Configuration**:
+- **Site URL**: `https://your-app.vercel.app`
+- Add the same to **Redirect URLs**
+
+> The anon key is safe to expose in the browser — access control is
+> enforced by Postgres RLS, not by hiding the key.
 
 ## How it works
 
-- **Auth**: `@supabase/ssr` stores the session in cookies. `middleware.ts`
-  refreshes it on every request, redirects unauthenticated users away from
-  `/dashboard`, and authenticated users away from `/login` & `/register`.
-- **Data isolation**: every query is scoped to the logged-in user by
-  **RLS policies** (`auth.uid() = user_id`) — not by app-layer filtering.
-- **Mutations**: all writes go through **Server Actions** in `actions/`,
-  which call `revalidatePath` to refresh the affected page.
-```
+- **Sessions**: `@supabase/ssr` stores the auth session in cookies.
+  `middleware.ts` refreshes it on every request.
+- **Route protection**: middleware redirects unauthenticated users away
+  from `/dashboard` and authenticated users away from `/login`/`/register`;
+  the dashboard layout re-checks server-side as a second line of defense.
+- **Mutations**: login/register/logout are Server Actions in
+  `actions/auth.ts` — no API routes needed.

@@ -33,10 +33,10 @@ const CONFIG = {
 } as const;
 
 /**
- * Synchronous generation (MVP): merge CONTENT + STYLE layers into one
- * structured prompt and get schema-guaranteed JSON back.
+ * Calls the API once and returns the parsed output, or throws with an
+ * actionable message if the response is empty/truncated/refused.
  */
-export async function generateStructured(args: {
+async function callOnce(args: {
   type: AIContentType;
   subjectName: string;
   contentDocs: StudyDocument[];
@@ -51,9 +51,6 @@ export async function generateStructured(args: {
     model: MODEL,
     max_tokens: 16000,
     thinking: { type: "adaptive" },
-    // `medium` effort keeps thinking-token spend (and latency) in check so a
-    // bounded generation fits under the serverless function limit and leaves
-    // room in max_tokens for the structured output. `format` guarantees JSON.
     output_config: { effort: "medium", format: zodOutputFormat(config.schema) },
     system: config.system,
     messages: [
@@ -69,8 +66,6 @@ export async function generateStructured(args: {
     ],
   });
 
-  // Surface the actual reason when parsing yields nothing, so the UI shows
-  // something actionable instead of a generic failure.
   if (response.stop_reason === "max_tokens") {
     throw new Error(
       "The result was too long and got cut off. Try fewer questions/cards, or split the material across smaller generations."
@@ -85,4 +80,40 @@ export async function generateStructured(args: {
     throw new Error("The model did not return valid structured output.");
   }
   return { title: parsed.title, json: parsed };
+}
+
+/**
+ * Generates structured study content (exam / quiz / flashcards).
+ *
+ * Strategy: attempt once; on structured-output failure retry a single time
+ * before propagating a readable error to the UI. All other errors (network,
+ * auth, truncation, refusal) propagate immediately.
+ */
+export async function generateStructured(args: {
+  type: AIContentType;
+  subjectName: string;
+  contentDocs: StudyDocument[];
+  styleDocs: StudyDocument[];
+  options: GenerateOptions;
+}): Promise<{ title: string; json: unknown }> {
+  try {
+    return await callOnce(args);
+  } catch (firstErr) {
+    // Only retry for "no structured output" — not for truncation/refusal/network.
+    const isStructureError =
+      firstErr instanceof Error &&
+      firstErr.message === "The model did not return valid structured output.";
+    if (!isStructureError) throw firstErr;
+
+    // Single retry — give the model a second chance with the same prompt.
+    try {
+      return await callOnce(args);
+    } catch (secondErr) {
+      throw new Error(
+        secondErr instanceof Error && secondErr.message !== firstErr.message
+          ? secondErr.message
+          : "The model failed to produce structured output after two attempts. Try reducing the question count or simplifying the document content."
+      );
+    }
+  }
 }

@@ -110,3 +110,13 @@ export async function generateContent(
   revalidatePath(`/subjects/${subject.id}`, "layout");
   return { id: inserted.id as string };
 }
+
+export async function deleteGeneratedContent(
+  id: string,
+  subjectId: string
+): Promise<void> {
+  if (!id) return;
+  const { supabase } = await requireUser();
+  await supabase.from("ai_generated_content").delete().eq("id", id);
+  revalidatePath(`/subjects/${subjectId}`, "layout");
+}

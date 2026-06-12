@@ -64,6 +64,7 @@ export function GeneratePanel({
   const [pending, startTransition] = useTransition();
 
   function selectType(t: AIContentType) {
+    if (pending) return;
     setType(t);
     setCount(t === "flashcards" ? 20 : 10);
   }
@@ -90,6 +91,7 @@ export function GeneratePanel({
 
   return (
     <div className="space-y-4">
+      {/* Type selector — disabled while generating */}
       <div className="grid gap-3 sm:grid-cols-3">
         {AI_CONTENT_TYPES.map((t) => {
           const Icon = META[t].icon;
@@ -99,8 +101,9 @@ export function GeneratePanel({
               key={t}
               type="button"
               onClick={() => selectType(t)}
+              disabled={pending}
               className={cn(
-                "rounded-lg border p-4 text-left transition-colors",
+                "rounded-lg border p-4 text-left transition-colors disabled:pointer-events-none disabled:opacity-50",
                 active
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-input bg-card hover:bg-accent"
@@ -121,6 +124,7 @@ export function GeneratePanel({
         })}
       </div>
 
+      {/* Options */}
       <Card>
         <CardContent className="p-6">
           <form onSubmit={onSubmit} className="space-y-4">
@@ -131,6 +135,7 @@ export function GeneratePanel({
                   id="gen-teacher"
                   value={teacherId}
                   onChange={(e) => setTeacherId(e.target.value)}
+                  disabled={pending}
                 >
                   <option value="">No specific teacher</option>
                   {teachers.map((t) => (
@@ -151,6 +156,7 @@ export function GeneratePanel({
                   max={50}
                   value={count}
                   onChange={(e) => setCount(Number(e.target.value))}
+                  disabled={pending}
                 />
               </div>
               {type === "exam" && (
@@ -163,6 +169,7 @@ export function GeneratePanel({
                     max={500}
                     value={totalMarks}
                     onChange={(e) => setTotalMarks(Number(e.target.value))}
+                    disabled={pending}
                   />
                 </div>
               )}
@@ -172,6 +179,7 @@ export function GeneratePanel({
                   id="gen-difficulty"
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                  disabled={pending}
                 >
                   <option value="mixed">Mixed</option>
                   <option value="easy">Easy</option>
@@ -199,7 +207,9 @@ export function GeneratePanel({
               </Button>
               {pending && (
                 <p className="text-sm text-muted-foreground">
-                  The AI is reading your documents — this can take a minute.
+                  Reading your documents and building the{" "}
+                  {META[type].title.toLowerCase()} — this usually takes
+                  30–60 seconds.
                 </p>
               )}
             </div>

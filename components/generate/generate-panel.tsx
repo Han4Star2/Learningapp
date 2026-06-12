@@ -53,6 +53,7 @@ export function GeneratePanel({
   const [count, setCount] = useState(initialType === "flashcards" ? 20 : 10);
   const [difficulty, setDifficulty] = useState<Difficulty>("mixed");
   const [totalMarks, setTotalMarks] = useState(50);
+  const [topics, setTopics] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -73,6 +74,7 @@ export function GeneratePanel({
         count,
         difficulty,
         totalMarks: type === "exam" ? totalMarks : undefined,
+        topics: topics.trim() || undefined,
       });
       if ("error" in result) {
         setError(result.error);
@@ -194,6 +196,23 @@ export function GeneratePanel({
                   <option value="hard">Hard</option>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="gen-topics">
+                Topics to cover <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <input
+                id="gen-topics"
+                className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-sm transition-all duration-200 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="e.g. Photosynthesis, Cell Division, DNA Replication"
+                value={topics}
+                onChange={(e) => setTopics(e.target.value)}
+                disabled={pending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Comma-separated list of topics the AI must include. Leave empty to cover all material.
+              </p>
             </div>
 
             {error && (

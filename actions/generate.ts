@@ -39,6 +39,7 @@ export type GenerateInput = {
   count: number;
   difficulty: GenerateOptions["difficulty"];
   totalMarks?: number;
+  topics?: string;
 };
 
 /**
@@ -104,7 +105,7 @@ export async function generateContent(
       subjectName: subject.name,
       contentDocs,
       styleDocs,
-      options: { count, difficulty: input.difficulty, totalMarks },
+      options: { count, difficulty: input.difficulty, totalMarks, topics: input.topics },
     }));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Generation failed.";

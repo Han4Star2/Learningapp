@@ -9,6 +9,7 @@ export type GenerateOptions = {
   count: number;
   difficulty: "easy" | "medium" | "hard" | "mixed";
   totalMarks?: number;
+  topics?: string; // optional comma-separated topic list from the user
 };
 
 const CONFIG = {
@@ -16,22 +17,34 @@ const CONFIG = {
     system: EXAM_SYSTEM,
     schema: ExamSchema,
     schemaName: "exam",
-    task: (o: GenerateOptions) =>
-      `Generate an exam of ${o.count} questions totalling ${o.totalMarks ?? o.count * 5} marks at ${o.difficulty} overall difficulty. Tag each question with its topic and provide a concise marking scheme.`,
+    task: (o: GenerateOptions) => {
+      const base = `Generate an exam of ${o.count} questions totalling ${o.totalMarks ?? o.count * 5} marks at ${o.difficulty} overall difficulty. Tag each question with its topic and provide a concise marking scheme.`;
+      return o.topics?.trim()
+        ? `${base}\n\nTOPICS TO COVER: The exam MUST include questions on the following topics (distribute marks proportionally across them): ${o.topics.trim()}`
+        : base;
+    },
   },
   quiz: {
     system: QUIZ_SYSTEM,
     schema: QuizSchema,
     schemaName: "quiz",
-    task: (o: GenerateOptions) =>
-      `Generate a ${o.count}-question revision quiz at ${o.difficulty} difficulty.`,
+    task: (o: GenerateOptions) => {
+      const base = `Generate a ${o.count}-question revision quiz at ${o.difficulty} difficulty.`;
+      return o.topics?.trim()
+        ? `${base}\n\nTOPICS TO COVER: Focus the questions on these topics: ${o.topics.trim()}`
+        : base;
+    },
   },
   flashcards: {
     system: FLASHCARDS_SYSTEM,
     schema: FlashcardSetSchema,
     schemaName: "flashcard_set",
-    task: (o: GenerateOptions) =>
-      `Generate ${o.count} flashcards covering the key recallable facts, definitions and concepts.`,
+    task: (o: GenerateOptions) => {
+      const base = `Generate ${o.count} flashcards covering the key recallable facts, definitions and concepts.`;
+      return o.topics?.trim()
+        ? `${base}\n\nTOPICS TO COVER: Focus the cards on these topics: ${o.topics.trim()}`
+        : base;
+    },
   },
 } as const;
 

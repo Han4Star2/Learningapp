@@ -4,20 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectDialog } from "@/components/subjects/subject-dialog";
-import type { Subject } from "@/types/domain";
+import { ExamPredictor } from "@/components/predict/exam-predictor";
+import type { Subject, Teacher } from "@/types/domain";
+
+// Allow the predictExam server action (called from this route) up to 60 s.
+export const maxDuration = 60;
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [{ data: subjectRows, error }, { data: docRows }, { data: genRows }] =
-    await Promise.all([
-      supabase.from("subjects").select("*").order("created_at", { ascending: true }),
-      supabase.from("documents").select("subject_id"),
-      supabase.from("ai_generated_content").select("subject_id"),
-    ]);
+  const [
+    { data: subjectRows, error },
+    { data: docRows },
+    { data: genRows },
+    { data: teacherRows },
+  ] = await Promise.all([
+    supabase.from("subjects").select("*").order("created_at", { ascending: true }),
+    supabase.from("documents").select("subject_id"),
+    supabase.from("ai_generated_content").select("subject_id"),
+    supabase.from("teachers").select("*").order("name"),
+  ]);
   if (error) throw new Error(error.message);
 
   const subjects = (subjectRows ?? []) as Subject[];
+  const teachers = (teacherRows ?? []) as Teacher[];
   const docCounts = countBySubject(docRows);
   const genCounts = countBySubject(genRows);
 
@@ -90,6 +100,11 @@ export default async function DashboardPage() {
           </div>
         </section>
       )}
+
+      {/* ── AI Exam Predictor ───────────────────────────── */}
+      <div className="border-t pt-8">
+        <ExamPredictor subjects={subjects} teachers={teachers} />
+      </div>
     </div>
   );
 }

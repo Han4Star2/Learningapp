@@ -13,6 +13,7 @@ export function SubjectTabs({ subjectId }: { subjectId: string }) {
     { href: `${base}/documents`, label: "Documents", exact: false },
     { href: `${base}/generate`, label: "Generate", exact: false },
     { href: `${base}/library`, label: "Library", exact: false },
+    { href: `${base}/context`, label: "Context", exact: false },
   ];
 
   return (

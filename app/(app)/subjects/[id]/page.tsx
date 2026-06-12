@@ -7,6 +7,7 @@ import {
   ClipboardList,
   ListChecks,
   Layers,
+  BookOpen,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DOCUMENT_TYPES,
+  AI_CONTENT_TYPES,
   type StudyDocument,
   type AIGeneratedContent,
   type Teacher,
@@ -63,6 +65,9 @@ export default async function SubjectHubPage({
   const countsByType = Object.fromEntries(
     DOCUMENT_TYPES.map((t) => [t, docs.filter((d) => d.type === t).length])
   );
+  const genCountsByType = Object.fromEntries(
+    AI_CONTENT_TYPES.map((t) => [t, generated.filter((g) => g.type === t).length])
+  );
   const taggedTeacherIds = new Set(
     docs.map((d) => d.teacher_id).filter(Boolean)
   );
@@ -93,7 +98,7 @@ export default async function SubjectHubPage({
         <StatCard
           icon={<FileText className="size-5" />}
           value={docs.length}
-          label="Documents"
+          label="Total documents"
         />
         <StatCard
           icon={<Sparkles className="size-5" />}
@@ -106,6 +111,27 @@ export default async function SubjectHubPage({
           label={`Teachers tagged · ${teachers.length} total`}
         />
       </div>
+
+      {/* Generated content breakdown */}
+      {generated.length > 0 && (
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base">Generated content</CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/subjects/${id}/library`}>View library</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {AI_CONTENT_TYPES.map((t) => (
+                <Badge key={t} variant="secondary" className="capitalize">
+                  {genCountsByType[t]} {t}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Document breakdown */}
       <Card>
@@ -158,7 +184,12 @@ export default async function SubjectHubPage({
           </Button>
           <Button variant="ghost" asChild>
             <Link href={`/subjects/${id}/documents`}>
-              <Plus /> Add document
+              <Plus /> Upload document
+            </Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href={`/subjects/${id}/library`}>
+              <BookOpen /> Open library
             </Link>
           </Button>
         </CardContent>

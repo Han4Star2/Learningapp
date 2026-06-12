@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +67,7 @@ export function DocumentDialog({
           teacherId: teacherId || null,
         });
         if ("error" in result) return setError(result.error);
+        toast.success("Document saved.");
       } else {
         let storagePath: string | null = null;
         if (file && file.size > 0) {
@@ -82,6 +84,7 @@ export function DocumentDialog({
           storagePath,
         });
         if ("error" in result) return setError(result.error);
+        toast.success("Document added.");
       }
 
       setOpen(false);

@@ -22,11 +22,15 @@ export async function createDocument(
   if (!input.subjectId) return { error: "Missing subject." };
   if (!DOCUMENT_TYPES.includes(input.type)) return { error: "Invalid type." };
   if (!title) return { error: "Title is required." };
+  if (title.length > 200) return { error: "Title must be 200 characters or fewer." };
   if (!content) {
     return {
       error:
         "Text content is required — it's what the AI reads. Paste the document text (file attachment is optional).",
     };
+  }
+  if (content.length > 500_000) {
+    return { error: "Content exceeds the 500 000 character limit. Please trim the document." };
   }
 
   const { supabase, user } = await requireUser();
@@ -35,8 +39,18 @@ export async function createDocument(
     .from("subjects")
     .select("id")
     .eq("id", input.subjectId)
+    .eq("user_id", user.id)
     .single();
   if (!subjectRow) return { error: "Subject not found." };
+
+  if (input.teacherId) {
+    const { data: teacherRow } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("id", input.teacherId)
+      .single();
+    if (!teacherRow) return { error: "Teacher not found." };
+  }
 
   const { error } = await supabase.from("documents").insert({
     user_id: user.id,
@@ -71,9 +85,23 @@ export async function updateDocument(
   if (!input.id) return { error: "Missing document." };
   if (!DOCUMENT_TYPES.includes(input.type)) return { error: "Invalid type." };
   if (!title) return { error: "Title is required." };
+  if (title.length > 200) return { error: "Title must be 200 characters or fewer." };
   if (!content) return { error: "Text content is required." };
+  if (content.length > 500_000) {
+    return { error: "Content exceeds the 500 000 character limit. Please trim the document." };
+  }
 
   const { supabase } = await requireUser();
+
+  if (input.teacherId) {
+    const { data: teacherRow } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("id", input.teacherId)
+      .single();
+    if (!teacherRow) return { error: "Teacher not found." };
+  }
+
   const { error } = await supabase
     .from("documents")
     .update({

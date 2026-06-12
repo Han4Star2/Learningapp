@@ -150,3 +150,46 @@ export async function deleteGeneratedContent(
   await supabase.from("ai_generated_content").delete().eq("id", id);
   revalidatePath(`/subjects/${subjectId}`, "layout");
 }
+
+export async function renameGeneratedContent(
+  id: string,
+  subjectId: string,
+  newTitle: string
+): Promise<{ ok: true } | { error: string }> {
+  const title = newTitle.trim();
+  if (!title) return { error: "Title is required." };
+  if (title.length > 200) return { error: "Title must be 200 characters or fewer." };
+  const { supabase } = await requireUser();
+  const { error } = await supabase
+    .from("ai_generated_content")
+    .update({ title })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath(`/subjects/${subjectId}`, "layout");
+  return { ok: true };
+}
+
+export async function duplicateGeneratedContent(
+  id: string,
+  subjectId: string
+): Promise<{ ok: true } | { error: string }> {
+  const { supabase, user } = await requireUser();
+  const { data } = await supabase
+    .from("ai_generated_content")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (!data) return { error: "Item not found." };
+  const { error } = await supabase.from("ai_generated_content").insert({
+    user_id: user.id,
+    subject_id: data.subject_id,
+    teacher_id: data.teacher_id,
+    type: data.type,
+    title: `${data.title} (Copy)`,
+    content_json: data.content_json,
+    source_document_ids: data.source_document_ids,
+  });
+  if (error) return { error: error.message };
+  revalidatePath(`/subjects/${subjectId}`, "layout");
+  return { ok: true };
+}

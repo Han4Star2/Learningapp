@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Paperclip, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +30,7 @@ export function DocumentsList({
   documents: StudyDocument[];
   teachers: Teacher[];
 }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
 
   const teacherName = (id: string | null) =>
@@ -70,8 +74,13 @@ export function DocumentsList({
           {visible.map((doc) => (
             <li key={doc.id}>
               <Card className="flex items-center justify-between gap-3 p-4">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{doc.title}</p>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/subjects/${subjectId}/documents/${doc.id}`}
+                    className="truncate font-medium hover:underline"
+                  >
+                    {doc.title}
+                  </Link>
                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="secondary" className="capitalize">
                       {doc.type}
@@ -102,7 +111,11 @@ export function DocumentsList({
                   <ConfirmDialog
                     title="Delete document"
                     description="This permanently deletes the document and any attached file."
-                    onConfirm={() => deleteDocument(doc.id, subjectId)}
+                    onConfirm={async () => {
+                      await deleteDocument(doc.id, subjectId);
+                      toast.success("Document deleted.");
+                      router.refresh();
+                    }}
                     trigger={
                       <Button variant="ghost" size="icon" className="size-8 text-destructive" aria-label="Delete document">
                         <Trash2 />

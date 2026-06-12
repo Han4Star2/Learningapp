@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import type { FlashcardSet } from "@/lib/ai/schemas";
 
 export function FlashcardDeck({ set }: { set: FlashcardSet }) {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const card = set.cards[index];
   if (!card)
@@ -15,6 +17,7 @@ export function FlashcardDeck({ set }: { set: FlashcardSet }) {
 
   function go(delta: number) {
     setFlipped(false);
+    setShowHint(false);
     setIndex((i) => Math.min(Math.max(i + delta, 0), set.cards.length - 1));
   }
 
@@ -35,16 +38,33 @@ export function FlashcardDeck({ set }: { set: FlashcardSet }) {
       >
         <Card className="transition-shadow hover:shadow-md">
           <CardContent className="flex min-h-56 flex-col items-center justify-center p-8 text-center">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Badge variant="secondary" className="mb-3 text-xs uppercase tracking-wide">
               {flipped ? "Back" : "Front"} — tap to flip
-            </p>
-            <p className="mt-3 whitespace-pre-wrap text-lg">
+            </Badge>
+            <p className="whitespace-pre-wrap text-lg">
               {flipped ? card.back : card.front}
             </p>
             <p className="mt-4 text-xs text-muted-foreground">{card.topic}</p>
           </CardContent>
         </Card>
       </button>
+
+      {/* Hint */}
+      {card.hint && !flipped && (
+        <div className="text-center">
+          {showHint ? (
+            <p className="text-sm text-muted-foreground italic">💡 {card.hint}</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowHint(true)}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Show hint
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={() => go(-1)} disabled={index === 0}>

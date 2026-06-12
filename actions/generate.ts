@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { generateStructured, type GenerateOptions } from "@/lib/ai/generate";
 import { ExamSchema, QuizSchema, FlashcardSetSchema } from "@/lib/ai/schemas";
+import { evaluateExamQuality, evaluateQuizQuality, evaluateFlashcardQuality } from "@/lib/ai/quality";
 import {
   AI_CONTENT_TYPES,
   type AIContentType,
+  type GenerationSettings,
   type StudyDocument,
   type Subject,
 } from "@/types/domain";
@@ -24,6 +26,12 @@ const SCHEMA_MAP = {
   flashcards: FlashcardSetSchema,
 } as const;
 
+const QUALITY_MAP = {
+  exam: evaluateExamQuality,
+  quiz: evaluateQuizQuality,
+  flashcards: evaluateFlashcardQuality,
+} as const;
+
 export type GenerateInput = {
   subjectId: string;
   type: AIContentType;
@@ -36,7 +44,7 @@ export type GenerateInput = {
 /**
  * Synchronous AI generation (MVP — no queue):
  * CONTENT layer = all subject documents; STYLE layer = the teacher's past
- * exams. Result is persisted to ai_generated_content and its id returned.
+ * exams. Result is quality-validated then persisted to ai_generated_content.
  */
 export async function generateContent(
   input: GenerateInput
@@ -60,7 +68,6 @@ export async function generateContent(
   if (!subjectRow) return { error: "Subject not found." };
   const subject = subjectRow as Subject;
 
-  // CONTENT layer — every document in the subject.
   const { data: contentRows } = await supabase
     .from("documents")
     .select("*")
@@ -76,7 +83,6 @@ export async function generateContent(
     };
   }
 
-  // STYLE layer — the chosen teacher's past exams (may span subjects).
   let styleDocs: StudyDocument[] = [];
   if (input.teacherId) {
     const { data: styleRows } = await supabase
@@ -98,19 +104,14 @@ export async function generateContent(
       subjectName: subject.name,
       contentDocs,
       styleDocs,
-      options: {
-        count,
-        difficulty: input.difficulty,
-        totalMarks,
-      },
+      options: { count, difficulty: input.difficulty, totalMarks },
     }));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Generation failed.";
     return { error: `AI generation failed: ${message}` };
   }
 
-  // Validate AI output before persisting — structured outputs should always
-  // match, but this guards against schema drift between generation and storage.
+  // Structure validation
   const schemaResult = SCHEMA_MAP[input.type].safeParse(json);
   if (!schemaResult.success) {
     return {
@@ -119,7 +120,21 @@ export async function generateContent(
     };
   }
 
+  // Quality evaluation — reject obviously bad output
+  const qualityError = (QUALITY_MAP[input.type] as (data: typeof schemaResult.data) => string | null)(schemaResult.data);
+  if (qualityError) {
+    return {
+      error: `Generated content failed quality checks: ${qualityError} Please try again.`,
+    };
+  }
+
   const sourceIds = [...contentDocs, ...styleDocs].map((d) => d.id);
+  const generationSettings: GenerationSettings = {
+    count,
+    difficulty: input.difficulty,
+    ...(totalMarks !== undefined ? { total_marks: totalMarks } : {}),
+  };
+
   const { data: inserted, error } = await supabase
     .from("ai_generated_content")
     .insert({
@@ -130,6 +145,7 @@ export async function generateContent(
       title,
       content_json: json,
       source_document_ids: sourceIds,
+      generation_settings: generationSettings,
     })
     .select("id")
     .single();
@@ -188,6 +204,7 @@ export async function duplicateGeneratedContent(
     title: `${data.title} (Copy)`,
     content_json: data.content_json,
     source_document_ids: data.source_document_ids,
+    generation_settings: data.generation_settings ?? null,
   });
   if (error) return { error: error.message };
   revalidatePath(`/subjects/${subjectId}`, "layout");

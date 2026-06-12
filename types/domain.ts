@@ -43,6 +43,12 @@ export type StudyDocument = {
 export const AI_CONTENT_TYPES = ["exam", "quiz", "flashcards"] as const;
 export type AIContentType = (typeof AI_CONTENT_TYPES)[number];
 
+export type GenerationSettings = {
+  count: number;
+  difficulty: "easy" | "medium" | "hard" | "mixed";
+  total_marks?: number;
+};
+
 export type AIGeneratedContent = {
   id: string;
   user_id: string;
@@ -52,6 +58,7 @@ export type AIGeneratedContent = {
   title: string;
   content_json: unknown; // narrowed via lib/ai/schemas at render time
   source_document_ids: string[];
+  generation_settings?: GenerationSettings | null;
   created_at: string;
 };
 

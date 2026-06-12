@@ -51,7 +51,10 @@ export async function generateStructured(args: {
     model: MODEL,
     max_tokens: 16000,
     thinking: { type: "adaptive" },
-    output_config: { format: zodOutputFormat(config.schema) },
+    // `medium` effort keeps thinking-token spend (and latency) in check so a
+    // bounded generation fits under the serverless function limit and leaves
+    // room in max_tokens for the structured output. `format` guarantees JSON.
+    output_config: { effort: "medium", format: zodOutputFormat(config.schema) },
     system: config.system,
     messages: [
       {
@@ -65,6 +68,17 @@ export async function generateStructured(args: {
       },
     ],
   });
+
+  // Surface the actual reason when parsing yields nothing, so the UI shows
+  // something actionable instead of a generic failure.
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(
+      "The result was too long and got cut off. Try fewer questions/cards, or split the material across smaller generations."
+    );
+  }
+  if (response.stop_reason === "refusal") {
+    throw new Error("The request was declined. Try different source material.");
+  }
 
   const parsed = response.parsed_output;
   if (!parsed) {

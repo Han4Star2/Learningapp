@@ -2,9 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { GeneratePanel } from "@/components/generate/generate-panel";
 import { AI_CONTENT_TYPES, type AIContentType, type Teacher } from "@/types/domain";
 
-// Synchronous AI generation runs inside this route's Server Action —
-// give it headroom beyond the default function timeout.
-export const maxDuration = 120;
+// Synchronous AI generation runs inside this route's Server Action. 60s is the
+// Vercel Hobby ceiling, so it deploys everywhere; raise it (e.g. 300) on Pro.
+export const maxDuration = 60;
 
 export default async function GeneratePage({
   params,

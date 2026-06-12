@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"], display: "swap" });
+
 export const metadata: Metadata = {
-  title: "LearningApp",
+  title: "StudyAI",
   description: "AI-powered learning platform for students",
 };
+
+// Runs synchronously before React hydration to prevent flash of wrong theme
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('theme'),c=localStorage.getItem('colorTheme'),e=document.documentElement;if(t==='dark')e.classList.add('dark');if(c&&c!=='blue')e.setAttribute('data-theme',c)}catch(e){}})()`;
 
 export default function RootLayout({
   children,
@@ -13,10 +20,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-        <Toaster richColors closeButton />
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body className={`${inter.className} antialiased`}>
+        <ThemeProvider>
+          {children}
+          <Toaster richColors closeButton position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

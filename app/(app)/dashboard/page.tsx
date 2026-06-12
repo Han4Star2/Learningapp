@@ -1,7 +1,7 @@
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, FileText, Sparkles, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectDialog } from "@/components/subjects/subject-dialog";
 import type { Subject } from "@/types/domain";
@@ -21,14 +21,17 @@ export default async function DashboardPage() {
   const docCounts = countBySubject(docRows);
   const genCounts = countBySubject(genRows);
 
+  const totalDocs = (docRows ?? []).length;
+  const totalGen = (genRows ?? []).length;
+
   return (
     <div className="space-y-8">
-      <div className="flex items-end justify-between gap-4">
+      {/* ── Header ──────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Subjects</h1>
-          <p className="mt-1 text-muted-foreground">
-            Each subject holds your documents and powers AI exams, quizzes and
-            flashcards.
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your subjects, documents and generated study material.
           </p>
         </div>
         <SubjectDialog
@@ -41,16 +44,25 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {/* ── Summary stats ───────────────────────────────── */}
+      {subjects.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <SummaryCard icon={<Layers className="size-4" />} value={subjects.length} label="Subjects" />
+          <SummaryCard icon={<FileText className="size-4" />} value={totalDocs} label="Documents" />
+          <SummaryCard icon={<Sparkles className="size-4" />} value={totalGen} label="Generated items" />
+        </div>
+      )}
+
+      {/* ── Subject grid ────────────────────────────────── */}
       {subjects.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <BookOpen className="size-6 text-muted-foreground" />
+        <Card className="flex flex-col items-center justify-center gap-4 p-14 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
+            <BookOpen className="size-7 text-muted-foreground" />
           </div>
           <div>
-            <p className="font-medium">No subjects yet</p>
+            <p className="font-semibold">No subjects yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Create your first subject, then add notes and past exams to start
-              generating.
+              Create your first subject, then add notes and past exams to start generating.
             </p>
           </div>
           <SubjectDialog
@@ -63,18 +75,37 @@ export default async function DashboardPage() {
           />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {subjects.map((subject) => (
-            <SubjectCard
-              key={subject.id}
-              subject={subject}
-              documentCount={docCounts[subject.id] ?? 0}
-              generatedCount={genCounts[subject.id] ?? 0}
-            />
-          ))}
-        </div>
+        <section>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">All subjects</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {subjects.map((subject) => (
+              <SubjectCard
+                key={subject.id}
+                subject={subject}
+                documentCount={docCounts[subject.id] ?? 0}
+                generatedCount={genCounts[subject.id] ?? 0}
+              />
+            ))}
+          </div>
+        </section>
       )}
     </div>
+  );
+}
+
+function SummaryCard({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xl font-bold leading-none tabular-nums">{value}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

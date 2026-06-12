@@ -19,21 +19,20 @@ export default async function SubjectLayout({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("subjects")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data } = await supabase.from("subjects").select("*").eq("id", id).single();
   if (!data) notFound();
   const subject = data as Subject;
   const color = SUBJECT_COLOR_CLASSES[subject.color];
 
   return (
     <div className="space-y-6">
+      {/* Subject header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className={cn("size-4 shrink-0 rounded-full", color.dot)} />
-          <h1 className="truncate text-2xl font-bold tracking-tight">
+          <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", color.soft)}>
+            <span className={cn("size-3 rounded-full", color.dot)} />
+          </div>
+          <h1 className="truncate text-xl font-bold tracking-tight">
             {subject.name}
           </h1>
         </div>
@@ -41,8 +40,8 @@ export default async function SubjectLayout({
           <SubjectDialog
             subject={subject}
             trigger={
-              <Button variant="ghost" size="icon" aria-label="Edit subject">
-                <Pencil />
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg" aria-label="Edit subject">
+                <Pencil className="size-4" />
               </Button>
             }
           />
@@ -51,15 +50,19 @@ export default async function SubjectLayout({
             description="This permanently deletes the subject and all of its documents and generated content."
             onConfirm={() => deleteSubject(subject.id)}
             trigger={
-              <Button variant="ghost" size="icon" className="text-destructive" aria-label="Delete subject">
-                <Trash2 />
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg text-destructive/70 hover:text-destructive" aria-label="Delete subject">
+                <Trash2 className="size-4" />
               </Button>
             }
           />
         </div>
       </div>
+
       <SubjectTabs subjectId={subject.id} />
-      {children}
+
+      <div className="animate-slide-up">
+        {children}
+      </div>
     </div>
   );
 }

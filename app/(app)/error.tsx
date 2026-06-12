@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, RotateCcw } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function AppError({
@@ -11,15 +12,21 @@ export default function AppError({
   reset: () => void;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-destructive">Something went wrong</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {error.message || "An unexpected error occurred."}
-        </p>
-        <Button onClick={reset}>Try again</Button>
+    <Card className="border-destructive/30">
+      <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+          <AlertCircle className="size-6 text-destructive" />
+        </div>
+        <div>
+          <p className="font-semibold">Something went wrong</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {error.message || "An unexpected error occurred."}
+          </p>
+        </div>
+        <Button onClick={reset} variant="outline" size="sm">
+          <RotateCcw className="size-4" />
+          Try again
+        </Button>
       </CardContent>
     </Card>
   );

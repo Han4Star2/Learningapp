@@ -37,7 +37,7 @@ export function SubjectCard({
         <ConfirmDialog
           title="Delete subject"
           description="This permanently deletes the subject and all of its documents and generated content."
-          onConfirm={() => deleteSubject(subject.id)}
+          onConfirm={deleteSubject.bind(null, subject.id)}
           trigger={
             <Button variant="ghost" size="icon" className="size-7 rounded-lg text-destructive/70 hover:text-destructive" aria-label="Delete subject">
               <Trash2 className="size-3.5" />

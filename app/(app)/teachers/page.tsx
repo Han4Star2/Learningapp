@@ -79,7 +79,7 @@ export default async function TeachersPage() {
                 <ConfirmDialog
                   title="Delete teacher"
                   description="This removes the teacher. Documents tagged with them keep their text but lose the style link."
-                  onConfirm={() => deleteTeacher(teacher.id)}
+                  onConfirm={deleteTeacher.bind(null, teacher.id)}
                   trigger={
                     <Button variant="ghost" size="icon" className="size-8 text-destructive" aria-label="Delete teacher">
                       <Trash2 />

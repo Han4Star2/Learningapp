@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { LanguageProvider } from "@/lib/i18n/context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,8 +24,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <ThemeProvider>
-          {children}
-          <Toaster richColors closeButton position="bottom-right" />
+          <LanguageProvider>
+            {children}
+            <Toaster richColors closeButton position="bottom-right" />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

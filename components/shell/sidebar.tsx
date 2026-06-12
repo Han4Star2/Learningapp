@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, LogOut, GraduationCap } from "lucide-react";
+import { LayoutDashboard, Users, LogOut, GraduationCap, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SUBJECT_COLOR_CLASSES } from "@/lib/subject-colors";
 import { ThemeControls } from "@/components/theme/theme-toggle";
@@ -81,6 +81,14 @@ export function Sidebar({
           onClick={onClose}
         >
           Dashboard
+        </NavItem>
+        <NavItem
+          href="/upload"
+          active={pathname === "/upload"}
+          icon={Upload}
+          onClick={onClose}
+        >
+          Hochladen
         </NavItem>
         <NavItem
           href="/teachers"

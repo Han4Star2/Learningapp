@@ -78,6 +78,20 @@ export async function deleteExam(
   revalidatePath(`/subjects/${subjectId}`, "layout");
 }
 
+export async function updateExamDate(
+  id: string,
+  dateOfExam: string
+): Promise<{ ok: true } | { error: string }> {
+  if (!id) return { error: "Exam ID is required." };
+  const { supabase } = await requireUser();
+  const { error } = await supabase
+    .from("exams")
+    .update({ date_of_exam: dateOfExam })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function getExamSignedUrl(
   filePath: string
 ): Promise<{ url: string } | { error: string }> {

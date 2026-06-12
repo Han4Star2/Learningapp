@@ -83,5 +83,43 @@ export type Note = {
   created_at: string;
 };
 
+export type Grade = {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  grade_value: number;
+  max_value: number;
+  label: string | null;
+  created_at: string;
+};
+
+export type GradeStats = {
+  count: number;
+  average: number;           // 0–100 percentage
+  highest: number;
+  lowest: number;
+  trend: "improving" | "declining" | "stable" | null;
+  recent: Grade[];
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  type: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type ShareLink = {
+  id: string;
+  user_id: string;
+  token: string;
+  resource_type: "subject" | "ai_content";
+  resource_id: string;
+  expires_at: string | null;
+  created_at: string;
+};
+
 /** Return shape for form Server Actions used with `useActionState`. */
 export type FormState = { error: string } | undefined;

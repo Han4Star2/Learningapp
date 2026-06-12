@@ -62,5 +62,26 @@ export type AIGeneratedContent = {
   created_at: string;
 };
 
+export type Exam = {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  teacher_id: string | null;
+  date_of_exam: string | null;
+  file_url: string | null;
+  extracted_text: string | null;
+  created_at: string;
+};
+
+export type Note = {
+  id: string;
+  user_id: string;
+  subject_id: string;
+  file_url: string | null;
+  extracted_text: string | null;
+  note_date: string | null;
+  created_at: string;
+};
+
 /** Return shape for form Server Actions used with `useActionState`. */
 export type FormState = { error: string } | undefined;

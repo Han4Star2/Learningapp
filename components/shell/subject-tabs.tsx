@@ -11,6 +11,8 @@ export function SubjectTabs({ subjectId }: { subjectId: string }) {
   const tabs = [
     { href: base, label: "Overview", exact: true },
     { href: `${base}/documents`, label: "Documents", exact: false },
+    { href: `${base}/exams`, label: "Exams", exact: false },
+    { href: `${base}/notes`, label: "Notes", exact: false },
     { href: `${base}/generate`, label: "Generate", exact: false },
     { href: `${base}/library`, label: "Library", exact: false },
     { href: `${base}/context`, label: "Context", exact: false },

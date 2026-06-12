@@ -14,11 +14,12 @@ export function buildStoragePath(userId: string, fileName: string): string {
 }
 
 /**
- * Uploads a file directly from the browser to Supabase Storage, bypassing the
- * Next.js server body limit. Returns the stored object path on success.
+ * Generic browser-side file uploader. Uploads directly to Supabase Storage,
+ * bypassing the Next.js server body limit. Returns the stored object path.
  */
-export async function uploadDocumentFile(
-  file: File
+export async function uploadFile(
+  file: File,
+  bucket: string = DOCUMENTS_BUCKET
 ): Promise<{ path: string } | { error: string }> {
   if (file.size > MAX_FILE_MB * 1024 * 1024) {
     return { error: `File is too large (max ${MAX_FILE_MB} MB).` };
@@ -31,10 +32,15 @@ export async function uploadDocumentFile(
   if (!user) return { error: "Not authenticated." };
 
   const path = buildStoragePath(user.id, file.name);
-  const { error } = await supabase.storage
-    .from(DOCUMENTS_BUCKET)
-    .upload(path, file);
+  const { error } = await supabase.storage.from(bucket).upload(path, file);
   if (error) return { error: `Upload failed: ${error.message}` };
 
   return { path };
+}
+
+/** Convenience wrapper — kept for backward compatibility. */
+export async function uploadDocumentFile(
+  file: File
+): Promise<{ path: string } | { error: string }> {
+  return uploadFile(file, DOCUMENTS_BUCKET);
 }

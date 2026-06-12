@@ -45,11 +45,47 @@ export async function createDocument(
   return { ok: true };
 }
 
-export async function deleteDocument(formData: FormData) {
-  const id = String(formData.get("id") ?? "");
-  const subjectId = String(formData.get("subject_id") ?? "");
-  if (!id) return;
+export type UpdateDocumentInput = {
+  id: string;
+  subjectId: string;
+  type: DocumentType;
+  title: string;
+  content: string;
+  teacherId?: string | null;
+};
 
+export async function updateDocument(
+  input: UpdateDocumentInput
+): Promise<{ ok: true } | { error: string }> {
+  const title = input.title.trim();
+  const content = input.content.trim();
+
+  if (!input.id) return { error: "Missing document." };
+  if (!DOCUMENT_TYPES.includes(input.type)) return { error: "Invalid type." };
+  if (!title) return { error: "Title is required." };
+  if (!content) return { error: "Text content is required." };
+
+  const { supabase } = await requireUser();
+  const { error } = await supabase
+    .from("documents")
+    .update({
+      type: input.type,
+      title,
+      content,
+      teacher_id: input.teacherId || null,
+    })
+    .eq("id", input.id);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/subjects/${input.subjectId}`, "layout");
+  return { ok: true };
+}
+
+export async function deleteDocument(
+  id: string,
+  subjectId: string
+): Promise<void> {
+  if (!id) return;
   const { supabase } = await requireUser();
 
   // Remove the attached file first (if any); RLS scopes both operations.

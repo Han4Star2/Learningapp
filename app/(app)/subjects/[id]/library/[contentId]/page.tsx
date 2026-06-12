@@ -4,8 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { ExamView } from "@/components/content/exam-view";
 import { QuizView } from "@/components/content/quiz-view";
 import { FlashcardDeck } from "@/components/content/flashcard-deck";
+import { ArrowLeft } from "lucide-react";
 import { ExamSchema, QuizSchema, FlashcardSetSchema } from "@/lib/ai/schemas";
-import { Card } from "@/components/ui";
+import { Card, CardContent } from "@/components/ui/card";
 import type { AIGeneratedContent } from "@/types/domain";
 
 export default async function ContentPage({
@@ -43,9 +44,10 @@ export default async function ContentPage({
     <div className="space-y-4">
       <Link
         href={`/subjects/${id}/library`}
-        className="text-sm text-gray-500 hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        ← Library
+        <ArrowLeft className="size-4" />
+        Library
       </Link>
       {body}
     </div>
@@ -55,10 +57,12 @@ export default async function ContentPage({
 function InvalidContent() {
   return (
     <Card>
-      <p className="text-sm text-red-600">
-        This item&apos;s stored content doesn&apos;t match its schema and
-        can&apos;t be displayed.
-      </p>
+      <CardContent className="p-5">
+        <p className="text-sm text-destructive">
+          This item&apos;s stored content doesn&apos;t match its schema and
+          can&apos;t be displayed.
+        </p>
+      </CardContent>
     </Card>
   );
 }

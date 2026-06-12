@@ -15,11 +15,11 @@ and the schema is provisioned to grow into RAG later.
 
 ## Stack
 
-- **Next.js 15** — App Router, RSC, Server Actions, TypeScript
+- **Next.js 16** — App Router, RSC, Server Actions, TypeScript
 - **Supabase** — Postgres (+pgvector), Auth (`@supabase/ssr`), Storage
 - **Anthropic Claude** — `claude-opus-4-8` with structured outputs
   (schema-guaranteed JSON via Zod)
-- **Tailwind CSS** — minimal SaaS UI, sidebar + cards
+- **Tailwind CSS 4 + shadcn/ui** — SaaS UI: sidebar, cards, dialogs, badges
 
 ## Architecture
 
@@ -77,7 +77,8 @@ components/
 └─ ui.tsx · name-form.tsx · delete-button.tsx · clsx.ts
 supabase/migrations/
 ├─ 0001_init.sql                 # profiles + signup trigger
-└─ 0003_ai_study_assistant.sql   # core schema + RLS + storage bucket
+├─ 0003_ai_study_assistant.sql   # core schema + RLS + storage bucket
+└─ 0004_subject_color.sql        # subjects.color accent
 ```
 
 ## Database & security
@@ -122,8 +123,8 @@ when needed. Nothing else changes.
 ## Setup
 
 1. **Supabase project** → SQL Editor → run `0001_init.sql`, then
-   `0003_ai_study_assistant.sql` (creates tables, RLS, and the private
-   `documents` bucket).
+   `0003_ai_study_assistant.sql`, then `0004_subject_color.sql` (creates
+   tables, RLS, the private `documents` bucket, and the subject colour column).
 2. *(Dev)* Authentication → Providers → Email → disable "Confirm email".
 3. **Anthropic API key** from [platform.claude.com](https://platform.claude.com).
 4. Env vars:
@@ -150,8 +151,8 @@ when needed. Nothing else changes.
    never shipped to the browser).
 3. Deploy, then set Supabase **Auth → URL Configuration** to your
    `*.vercel.app` domain.
-4. Generation sets `maxDuration = 120` on the generate route; if your plan
-   caps function duration lower, reduce it in
+4. Generation sets `maxDuration = 60` on the generate route (the Vercel Hobby
+   ceiling); raise it (e.g. `300`) on Pro/Enterprise in
    `app/(app)/subjects/[id]/generate/page.tsx`.
 
 ## Notes & limits (MVP)

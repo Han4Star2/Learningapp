@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function AppError({
   error,
@@ -11,13 +12,15 @@ export default function AppError({
 }) {
   return (
     <Card>
-      <h2 className="font-medium text-red-600">Something went wrong</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        {error.message || "An unexpected error occurred."}
-      </p>
-      <div className="mt-3">
+      <CardHeader>
+        <CardTitle className="text-destructive">Something went wrong</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          {error.message || "An unexpected error occurred."}
+        </p>
         <Button onClick={reset}>Try again</Button>
-      </div>
+      </CardContent>
     </Card>
   );
 }

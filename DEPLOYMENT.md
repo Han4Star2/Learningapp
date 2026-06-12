@@ -27,10 +27,11 @@ Each is idempotent enough to paste-and-run once.
 |------|------|--------------|
 | 1 | `supabase/migrations/0001_init.sql` | `profiles` table + a trigger that auto-creates a profile row on sign-up |
 | 2 | `supabase/migrations/0003_ai_study_assistant.sql` | The full app schema: `subjects`, `teachers`, `documents`, `ai_generated_content`, `document_chunks`; all RLS policies; the `pgvector` extension; and the private `documents` storage bucket + its access policy |
+| 3 | `supabase/migrations/0004_subject_color.sql` | Adds the `color` accent column to `subjects` (used by the dashboard cards) |
 
 > **Skip `0002_school_years_subjects.sql`.** It belongs to an earlier
 > (school-year) design that `0003` supersedes — `0003` drops those tables.
-> On a fresh project, run `0001` then `0003` only.
+> On a fresh project, run `0001`, then `0003`, then `0004`.
 
 After running, verify under **Table Editor** that `subjects`, `teachers`,
 `documents`, `ai_generated_content`, and `document_chunks` exist, and under

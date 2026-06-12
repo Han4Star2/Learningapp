@@ -1,7 +1,20 @@
+export const SUBJECT_COLORS = [
+  "slate",
+  "blue",
+  "emerald",
+  "amber",
+  "rose",
+  "violet",
+  "cyan",
+  "orange",
+] as const;
+export type SubjectColor = (typeof SUBJECT_COLORS)[number];
+
 export type Subject = {
   id: string;
   user_id: string;
   name: string;
+  color: SubjectColor;
   created_at: string;
 };
 

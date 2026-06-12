@@ -69,6 +69,15 @@ The full production schema:
 > superseded. `0003` drops those tables automatically; running `0002`
 > first would create them unnecessarily and then immediately drop them.
 
+### Migration 3 — `supabase/migrations/0004_subject_color.sql`
+
+Adds a `color` column to `subjects` (default `'slate'`) — the accent shown on
+the dashboard subject cards and sidebar.
+
+```sql
+-- paste contents of supabase/migrations/0004_subject_color.sql here
+```
+
 **Verify after running:**
 
 - **Table Editor:** `subjects`, `teachers`, `documents`,

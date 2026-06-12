@@ -1,8 +1,8 @@
+import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { deleteDocument } from "@/actions/documents";
-import { DocumentForm } from "@/components/documents/document-form";
-import { DeleteButton } from "@/components/delete-button";
-import { Card } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { DocumentDialog } from "@/components/documents/document-dialog";
+import { DocumentsList } from "@/components/documents/documents-list";
 import type { StudyDocument, Teacher } from "@/types/domain";
 
 export default async function DocumentsPage({
@@ -24,47 +24,29 @@ export default async function DocumentsPage({
   if (error) throw new Error(error.message);
   const documents = (docRows ?? []) as StudyDocument[];
   const teachers = (teacherRows ?? []) as Teacher[];
-  const teacherName = (tid: string | null) =>
-    teachers.find((t) => t.id === tid)?.name ?? null;
 
   return (
     <div className="space-y-6">
-      <DocumentForm subjectId={id} teachers={teachers} />
-
-      {documents.length === 0 ? (
-        <Card>
-          <p className="text-sm text-gray-500">
-            No documents yet. Add notes, worksheets, textbook extracts — and tag
-            past exams with their teacher to capture exam style.
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Documents</h2>
+          <p className="text-sm text-muted-foreground">
+            The content the AI reads. Tag exams with a teacher to capture style.
           </p>
-        </Card>
-      ) : (
-        <ul className="space-y-2">
-          {documents.map((doc) => (
-            <li key={doc.id}>
-              <Card className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{doc.title}</p>
-                  <p className="mt-0.5 flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span className="rounded bg-gray-100 px-2 py-0.5">{doc.type}</span>
-                    {teacherName(doc.teacher_id) && (
-                      <span className="rounded bg-gray-100 px-2 py-0.5">
-                        {teacherName(doc.teacher_id)}
-                      </span>
-                    )}
-                    {doc.storage_path && <span>📎 file attached</span>}
-                    <span>{(doc.content ?? "").length.toLocaleString()} chars</span>
-                  </p>
-                </div>
-                <DeleteButton
-                  action={deleteDocument}
-                  fields={{ id: doc.id, subject_id: id }}
-                />
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+        </div>
+        <DocumentDialog
+          subjectId={id}
+          teachers={teachers}
+          trigger={
+            <Button>
+              <Plus />
+              Add document
+            </Button>
+          }
+        />
+      </div>
+
+      <DocumentsList subjectId={id} documents={documents} teachers={teachers} />
     </div>
   );
 }

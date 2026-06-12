@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { clsx } from "@/components/clsx";
+import { cn } from "@/lib/utils";
 
 export function SubjectTabs({ subjectId }: { subjectId: string }) {
   const pathname = usePathname();
@@ -16,7 +16,7 @@ export function SubjectTabs({ subjectId }: { subjectId: string }) {
   ];
 
   return (
-    <nav className="flex gap-1 border-b border-gray-200">
+    <nav className="flex gap-1 border-b">
       {tabs.map((tab) => {
         const active = tab.exact
           ? pathname === tab.href
@@ -25,11 +25,11 @@ export function SubjectTabs({ subjectId }: { subjectId: string }) {
           <Link
             key={tab.href}
             href={tab.href}
-            className={clsx(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition",
+            className={cn(
+              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-900"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
             {tab.label}

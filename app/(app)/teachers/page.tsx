@@ -1,8 +1,10 @@
+import { Plus, Pencil, Trash2, GraduationCap, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { createTeacher, deleteTeacher } from "@/actions/teachers";
-import { NameForm } from "@/components/name-form";
-import { DeleteButton } from "@/components/delete-button";
-import { Card } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { TeacherDialog } from "@/components/teachers/teacher-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { deleteTeacher } from "@/actions/teachers";
 import type { Teacher } from "@/types/domain";
 
 export default async function TeachersPage() {
@@ -15,38 +17,78 @@ export default async function TeachersPage() {
   const teachers = (data ?? []) as Teacher[];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Teachers</h1>
-        <p className="text-sm text-gray-500">
-          Tag uploaded exams with a teacher and the AI will imitate their exam
-          style — phrasing, structure, mark distribution.
-        </p>
+    <div className="space-y-8">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Teachers</h1>
+          <p className="mt-1 text-muted-foreground">
+            Teachers are global and reusable across every subject. Tag their past
+            exams and the AI imitates their style — phrasing, structure, marks.
+          </p>
+        </div>
+        <TeacherDialog
+          trigger={
+            <Button>
+              <Plus />
+              New teacher
+            </Button>
+          }
+        />
       </div>
 
-      <Card>
-        <NameForm
-          action={createTeacher}
-          placeholder="e.g. Mr. Smith"
-          submitLabel="Add teacher"
-        />
-      </Card>
-
       {teachers.length === 0 ? (
-        <Card>
-          <p className="text-sm text-gray-500">No teachers yet.</p>
+        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Users className="size-6 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-medium">No teachers yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add a teacher, then tag their past exams when uploading documents.
+            </p>
+          </div>
+          <TeacherDialog
+            trigger={
+              <Button>
+                <Plus />
+                Create teacher
+              </Button>
+            }
+          />
         </Card>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {teachers.map((teacher) => (
-            <li key={teacher.id}>
-              <Card className="flex items-center justify-between">
-                <span className="font-medium">{teacher.name}</span>
-                <DeleteButton action={deleteTeacher} fields={{ id: teacher.id }} />
-              </Card>
-            </li>
+            <Card key={teacher.id} className="flex items-center justify-between p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                  <GraduationCap className="size-4 text-muted-foreground" />
+                </div>
+                <span className="truncate font-medium">{teacher.name}</span>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <TeacherDialog
+                  teacher={teacher}
+                  trigger={
+                    <Button variant="ghost" size="icon" className="size-8" aria-label="Rename teacher">
+                      <Pencil />
+                    </Button>
+                  }
+                />
+                <ConfirmDialog
+                  title="Delete teacher"
+                  description="This removes the teacher. Documents tagged with them keep their text but lose the style link."
+                  onConfirm={() => deleteTeacher(teacher.id)}
+                  trigger={
+                    <Button variant="ghost" size="icon" className="size-8 text-destructive" aria-label="Delete teacher">
+                      <Trash2 />
+                    </Button>
+                  }
+                />
+              </div>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

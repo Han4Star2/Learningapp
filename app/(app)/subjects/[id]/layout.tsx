@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { deleteSubject } from "@/actions/subjects";
 import { Button } from "@/components/ui/button";
 import { SubjectDialog } from "@/components/subjects/subject-dialog";
-import { ConfirmDialog } from "@/components/confirm-dialog";
+import { DeleteSubjectButton } from "@/components/subjects/delete-subject-button";
 import { SubjectTabs } from "@/components/shell/subject-tabs";
 import { cn } from "@/lib/utils";
 import { SUBJECT_COLOR_CLASSES } from "@/lib/subject-colors";
@@ -45,16 +44,7 @@ export default async function SubjectLayout({
               </Button>
             }
           />
-          <ConfirmDialog
-            title="Delete subject"
-            description="This permanently deletes the subject and all of its documents and generated content."
-            onConfirm={() => deleteSubject(subject.id)}
-            trigger={
-              <Button variant="ghost" size="icon" className="size-8 rounded-lg text-destructive/70 hover:text-destructive" aria-label="Delete subject">
-                <Trash2 className="size-4" />
-              </Button>
-            }
-          />
+          <DeleteSubjectButton subjectId={subject.id} />
         </div>
       </div>
 

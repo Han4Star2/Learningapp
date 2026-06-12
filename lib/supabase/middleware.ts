@@ -5,7 +5,7 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
  * Refreshes the Supabase auth session on every request and guards
- * protected routes. Called from the root middleware.
+ * protected routes. Called from the root proxy.ts.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

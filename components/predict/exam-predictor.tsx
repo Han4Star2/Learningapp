@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   BrainCircuit,
   Loader2,
@@ -10,12 +11,16 @@ import {
   TrendingUp,
   BookOpen,
   AlertTriangle,
+  FolderOpen,
+  Upload,
+  Globe,
 } from "lucide-react";
-import { predictExam, type ExamPrediction } from "@/actions/predict-exam";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+  predictExam,
+  type ExamPrediction,
+  type PredictExamInput,
+} from "@/actions/predict-exam";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,50 +48,65 @@ export function ExamPredictor({
   subjects: Subject[];
   teachers: Teacher[];
 }) {
-  const [subjectId, setSubjectId]       = useState(subjects[0]?.id ?? "");
-  const [teacherId, setTeacherId]       = useState(teachers[0]?.id ?? "");
-  const [topicOverride, setTopicOverride] = useState("");
-  const [examDate, setExamDate]         = useState("");
-  const [result, setResult]             = useState<ExamPrediction | null>(null);
-  const [error, setError]               = useState<string | null>(null);
-  const [summaryOpen, setSummaryOpen]   = useState(false);
-  const [pending, startTransition]      = useTransition();
+  const router = useRouter();
 
-  const noSubjects  = subjects.length === 0;
-  const noTeachers  = teachers.length === 0;
+  const [subjectId, setSubjectId]           = useState(subjects[0]?.id ?? "");
+  const [teacherId, setTeacherId]           = useState(teachers[0]?.id ?? "");
+  const [topicOverride, setTopicOverride]   = useState("");
+  const [examDate, setExamDate]             = useState("");
+  const [result, setResult]                 = useState<ExamPrediction | null>(null);
+  const [missingTopics, setMissingTopics]   = useState<string[] | null>(null);
+  const [error, setError]                   = useState<string | null>(null);
+  const [summaryOpen, setSummaryOpen]       = useState(false);
+  const [pending, startTransition]          = useTransition();
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!subjectId || !teacherId) return;
+  const noSubjects = subjects.length === 0;
+  const noTeachers = teachers.length === 0;
+
+  function run(input: PredictExamInput) {
     setError(null);
     setResult(null);
+    setMissingTopics(null);
     setSummaryOpen(false);
     startTransition(async () => {
-      const res = await predictExam({
-        subjectId,
-        teacherId,
-        topicOverride: topicOverride.trim() || undefined,
-        examDate:      examDate || undefined,
-      });
+      const res = await predictExam(input);
       if ("error" in res) {
         setError(res.error);
+      } else if ("needs_material" in res) {
+        setMissingTopics(res.missingTopics);
       } else {
         setResult(res);
       }
     });
   }
 
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!subjectId || !teacherId) return;
+    run({ subjectId, teacherId, topicOverride: topicOverride.trim() || undefined, examDate: examDate || undefined });
+  }
+
+  function onWebFallback() {
+    run({
+      subjectId,
+      teacherId,
+      topicOverride: topicOverride.trim() || undefined,
+      examDate: examDate || undefined,
+      webSearchFallback: true,
+    });
+  }
+
   return (
     <section className="space-y-5">
-      {/* Section heading */}
+      {/* Heading */}
       <div className="flex items-center gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
           <BrainCircuit className="size-4" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold leading-tight">AI Exam Predictor</h2>
+          <h2 className="text-lg font-semibold leading-tight">KI Prüfungs-Vorhersage</h2>
           <p className="text-xs text-muted-foreground">
-            Analyses teacher patterns and subject content to predict likely exam questions.
+            Analysiert Lehrermuster und Unterlagen, um wahrscheinliche Prüfungsfragen vorherzusagen.
           </p>
         </div>
       </div>
@@ -97,7 +117,7 @@ export function ExamPredictor({
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="pred-subject">Subject</Label>
+                <Label htmlFor="pred-subject">Fach</Label>
                 <Select
                   id="pred-subject"
                   value={subjectId}
@@ -106,15 +126,13 @@ export function ExamPredictor({
                   required
                 >
                   {noSubjects
-                    ? <option value="">No subjects yet</option>
-                    : subjects.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
+                    ? <option value="">Kein Fach vorhanden</option>
+                    : subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </Select>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="pred-teacher">Teacher</Label>
+                <Label htmlFor="pred-teacher">Lehrer</Label>
                 <Select
                   id="pred-teacher"
                   value={teacherId}
@@ -123,30 +141,31 @@ export function ExamPredictor({
                   required
                 >
                   {noTeachers
-                    ? <option value="">No teachers yet — add one first</option>
-                    : teachers.map((t) => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
+                    ? <option value="">Kein Lehrer vorhanden</option>
+                    : teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </Select>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="pred-topics">
-                  Topic override{" "}
+                  Thema{" "}
                   <span className="font-normal text-muted-foreground">(optional)</span>
                 </Label>
                 <Input
                   id="pred-topics"
-                  placeholder="e.g. Calculus, Vectors, Integration"
+                  placeholder="z.B. Quadratische Gleichungen, Lineare Funktionen"
                   value={topicOverride}
-                  onChange={(e) => setTopicOverride(e.target.value)}
+                  onChange={(e) => {
+                    setTopicOverride(e.target.value);
+                    setMissingTopics(null);
+                  }}
                   disabled={pending}
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="pred-date">
-                  Exam date{" "}
+                  Prüfungsdatum{" "}
                   <span className="font-normal text-muted-foreground">(optional)</span>
                 </Label>
                 <Input
@@ -163,8 +182,8 @@ export function ExamPredictor({
               <p className="flex items-center gap-1.5 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                 <AlertTriangle className="size-3.5 shrink-0" />
                 {noSubjects
-                  ? "Add a subject first, then upload past exam documents for that teacher."
-                  : "Add a teacher first so predictions can analyse their exam patterns."}
+                  ? "Erstelle zuerst ein Fach und lade Unterlagen hoch."
+                  : "Füge zuerst einen Lehrer hinzu, damit die KI seine Muster analysieren kann."}
               </p>
             )}
 
@@ -176,25 +195,22 @@ export function ExamPredictor({
             )}
 
             <div className="flex items-center gap-3">
-              <Button
-                type="submit"
-                disabled={pending || noSubjects || noTeachers}
-              >
+              <Button type="submit" disabled={pending || noSubjects || noTeachers}>
                 {pending ? (
                   <>
                     <Loader2 className="animate-spin" />
-                    Analysing past exams…
+                    Analysiere…
                   </>
                 ) : (
                   <>
                     <BrainCircuit />
-                    Generate Prediction
+                    Vorhersage generieren
                   </>
                 )}
               </Button>
               {pending && (
-                <p className="text-sm text-muted-foreground animate-pulse">
-                  Reading teacher patterns — 20–40 s
+                <p className="animate-pulse text-sm text-muted-foreground">
+                  Lehrermuster lesen — 20–40 s
                 </p>
               )}
             </div>
@@ -205,6 +221,15 @@ export function ExamPredictor({
       {/* Loading skeleton */}
       {pending && <PredictionSkeleton />}
 
+      {/* Missing material prompt */}
+      {missingTopics && !pending && (
+        <MissingMaterialCard
+          topics={missingTopics}
+          onUpload={() => router.push("/upload")}
+          onSkip={onWebFallback}
+        />
+      )}
+
       {/* Results */}
       {result && !pending && (
         <PredictionResults
@@ -214,6 +239,73 @@ export function ExamPredictor({
         />
       )}
     </section>
+  );
+}
+
+// ── Missing material card ─────────────────────────────────────────────────────
+
+function MissingMaterialCard({
+  topics,
+  onUpload,
+  onSkip,
+}: {
+  topics: string[];
+  onUpload: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <Card
+      className="border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
+      style={{ animation: "slide-up 0.3s cubic-bezier(0.4,0,0.2,1) forwards" }}
+    >
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <FolderOpen className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="space-y-1.5">
+            <p className="font-semibold text-sm text-amber-900 dark:text-amber-200">
+              Keine Unterlagen für diese Themen gefunden
+            </p>
+            <p className="text-sm text-amber-800/80 dark:text-amber-300/80">
+              Für{" "}
+              <span className="font-medium">
+                {topics.join(", ")}
+              </span>{" "}
+              sind keine Arbeitsblätter oder Notizen hochgeladen. Hast du etwas dazu?
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {topics.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button
+            onClick={onUpload}
+            size="sm"
+            className="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
+          >
+            <Upload className="size-3.5" />
+            Jetzt hochladen
+          </Button>
+          <Button
+            onClick={onSkip}
+            size="sm"
+            variant="outline"
+            className="border-amber-400 text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
+          >
+            <Globe className="size-3.5" />
+            Überspringen — KI sucht selbst
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -258,23 +350,20 @@ function PredictionResults({
       className="space-y-5"
       style={{ animation: "slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards" }}
     >
-      {/* Overall confidence */}
       <Card>
         <CardContent className="flex items-center justify-between gap-4 p-4">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Target className="size-4 text-muted-foreground" />
-            Overall prediction confidence
+            Vorhersage-Konfidenz
           </div>
           <div className="flex items-center gap-3">
             <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-1000",
-                  result.confidence_score >= 70
-                    ? "bg-emerald-500"
-                    : result.confidence_score >= 45
-                    ? "bg-amber-400"
-                    : "bg-rose-500"
+                  result.confidence_score >= 70 ? "bg-emerald-500"
+                  : result.confidence_score >= 45 ? "bg-amber-400"
+                  : "bg-rose-500"
                 )}
                 style={{ width: `${result.confidence_score}%` }}
               />
@@ -286,11 +375,10 @@ function PredictionResults({
         </CardContent>
       </Card>
 
-      {/* Predicted questions */}
       <section className="space-y-3">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <BrainCircuit className="size-4 text-violet-500" />
-          Predicted Questions
+          Vorhergesagte Fragen
           <Badge variant="secondary" className="ml-1">
             {result.predicted_questions.length}
           </Badge>
@@ -302,12 +390,11 @@ function PredictionResults({
         </div>
       </section>
 
-      {/* Likely topics */}
       {result.likely_topics.length > 0 && (
         <section className="space-y-3">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <TrendingUp className="size-4 text-blue-500" />
-            Likely Topics
+            Wahrscheinliche Themen
           </h3>
           <Card>
             <CardContent className="space-y-4 p-5">
@@ -325,11 +412,9 @@ function PredictionResults({
                       <div
                         className={cn(
                           "h-full rounded-full transition-all duration-700",
-                          t.weight >= 0.5
-                            ? "bg-violet-500"
-                            : t.weight >= 0.25
-                            ? "bg-blue-400"
-                            : "bg-slate-400"
+                          t.weight >= 0.5 ? "bg-violet-500"
+                          : t.weight >= 0.25 ? "bg-blue-400"
+                          : "bg-slate-400"
                         )}
                         style={{ width: `${Math.round(t.weight * 100)}%` }}
                       />
@@ -342,7 +427,6 @@ function PredictionResults({
         </section>
       )}
 
-      {/* Reasoning summary — collapsible, default collapsed */}
       <section>
         <button
           type="button"
@@ -351,13 +435,11 @@ function PredictionResults({
         >
           <span className="flex items-center gap-2">
             <BookOpen className="size-4 text-muted-foreground" />
-            Reasoning Summary
+            Begründung
           </span>
-          {summaryOpen ? (
-            <ChevronUp className="size-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-4 text-muted-foreground" />
-          )}
+          {summaryOpen
+            ? <ChevronUp className="size-4 text-muted-foreground" />
+            : <ChevronDown className="size-4 text-muted-foreground" />}
         </button>
         {summaryOpen && (
           <Card className="mt-2 border-t-0 rounded-t-none">
@@ -392,15 +474,13 @@ function QuestionCard({
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-xs">{q.topic}</Badge>
           <Badge variant="secondary" className="text-xs">
-            {q.likely_marks} mark{q.likely_marks !== 1 ? "s" : ""}
+            {q.likely_marks} Punkt{q.likely_marks !== 1 ? "e" : ""}
           </Badge>
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-              CONFIDENCE_BADGE[q.confidence]
-            )}
-          >
-            {q.confidence} confidence
+          <span className={cn(
+            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+            CONFIDENCE_BADGE[q.confidence]
+          )}>
+            {q.confidence === "high" ? "hohe" : q.confidence === "medium" ? "mittlere" : "niedrige"} Konfidenz
           </span>
         </div>
 

@@ -96,11 +96,11 @@ export function GeneratePanel({
               onClick={() => selectType(t)}
               disabled={pending}
               className={cn(
-                "rounded-xl border p-4 text-left transition-all duration-150",
+                "rounded-xl border p-4 text-left transition-all duration-300 hover:scale-105 hover:-translate-y-1",
                 "disabled:pointer-events-none disabled:opacity-50",
                 active
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                  : "border-border bg-card hover:bg-accent/50 hover:border-border/80"
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-md"
+                  : "border-border bg-card hover:bg-accent/50 hover:border-border/80 hover:shadow-md"
               )}
             >
               <div className={cn(

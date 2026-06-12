@@ -101,11 +101,11 @@ export function LibraryList({ subjectId, items }: { subjectId: string; items: It
 
   return (
     <ul className="space-y-2">
-      {items.map((item) => {
+      {items.map((item, idx) => {
         const meta = TYPE_META[item.type];
         const Icon = meta.icon;
         return (
-          <li key={item.id} className="group relative">
+          <li key={item.id} className="group relative" style={{ animation: `slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards`, animationDelay: `${idx * 50}ms`, opacity: 0 }}>
             <Link href={`/subjects/${subjectId}/library/${item.id}`}>
               <Card className="transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md">
                 <CardContent className="flex items-center gap-4 p-4">

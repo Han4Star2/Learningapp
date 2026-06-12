@@ -26,10 +26,10 @@ function NavItem({
       href={href}
       onClick={onClick}
       className={cn(
-        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-150",
+        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-200",
         active
           ? "bg-primary/10 text-primary"
-          : "text-sidebar-foreground/70 hover:bg-accent/80 hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/70 hover:bg-accent/80 hover:text-sidebar-foreground hover:translate-x-0.5"
       )}
     >
       <Icon
@@ -107,15 +107,15 @@ export function Sidebar({
                     href={`/subjects/${s.id}`}
                     onClick={onClose}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-150",
+                      "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-200",
                       active
                         ? "bg-primary/10 font-medium text-primary"
-                        : "font-normal text-sidebar-foreground/70 hover:bg-accent/80 hover:text-sidebar-foreground"
+                        : "font-normal text-sidebar-foreground/70 hover:bg-accent/80 hover:text-sidebar-foreground hover:translate-x-0.5"
                     )}
                   >
                     <span
                       className={cn(
-                        "size-2 shrink-0 rounded-full transition-transform",
+                        "size-2 shrink-0 rounded-full transition-all duration-300",
                         color.dot,
                         active && "scale-125"
                       )}
@@ -149,7 +149,7 @@ export function Sidebar({
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground/70 transition-colors hover:bg-accent hover:text-destructive"
+            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground/70 transition-all duration-200 hover:bg-accent hover:text-destructive hover:translate-x-0.5"
           >
             <LogOut className="size-4" />
             Log out

@@ -63,7 +63,7 @@ export function AppShell({
             type="button"
             onClick={() => setSidebarOpen((v) => !v)}
             aria-label="Toggle navigation"
-            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200 hover:scale-110"
           >
             {sidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>

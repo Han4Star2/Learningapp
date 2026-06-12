@@ -58,8 +58,9 @@ export default async function TeachersPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {teachers.map((teacher) => (
-            <Card key={teacher.id} className="flex items-center justify-between p-4">
+          {teachers.map((teacher, idx) => (
+            <div key={teacher.id} style={{ animation: `slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards`, animationDelay: `${idx * 75}ms`, opacity: 0 }}>
+              <Card className="flex items-center justify-between p-4">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
                   <GraduationCap className="size-4 text-muted-foreground" />
@@ -87,6 +88,7 @@ export default async function TeachersPage() {
                 />
               </div>
             </Card>
+            </div>
           ))}
         </div>
       )}

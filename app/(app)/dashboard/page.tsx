@@ -78,13 +78,14 @@ export default async function DashboardPage() {
         <section>
           <h2 className="mb-3 text-sm font-medium text-muted-foreground">All subjects</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {subjects.map((subject) => (
-              <SubjectCard
-                key={subject.id}
-                subject={subject}
-                documentCount={docCounts[subject.id] ?? 0}
-                generatedCount={genCounts[subject.id] ?? 0}
-              />
+            {subjects.map((subject, idx) => (
+              <div key={subject.id} style={{ animation: `slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards`, animationDelay: `${idx * 75}ms`, opacity: 0 }}>
+                <SubjectCard
+                  subject={subject}
+                  documentCount={docCounts[subject.id] ?? 0}
+                  generatedCount={genCounts[subject.id] ?? 0}
+                />
+              </div>
             ))}
           </div>
         </section>

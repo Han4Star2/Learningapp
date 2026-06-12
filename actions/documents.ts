@@ -30,6 +30,14 @@ export async function createDocument(
   }
 
   const { supabase, user } = await requireUser();
+
+  const { data: subjectRow } = await supabase
+    .from("subjects")
+    .select("id")
+    .eq("id", input.subjectId)
+    .single();
+  if (!subjectRow) return { error: "Subject not found." };
+
   const { error } = await supabase.from("documents").insert({
     user_id: user.id,
     subject_id: input.subjectId,

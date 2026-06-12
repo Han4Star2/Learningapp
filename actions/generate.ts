@@ -3,12 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { generateStructured, type GenerateOptions } from "@/lib/ai/generate";
+import { ExamSchema, QuizSchema, FlashcardSetSchema } from "@/lib/ai/schemas";
 import {
   AI_CONTENT_TYPES,
   type AIContentType,
   type StudyDocument,
   type Subject,
 } from "@/types/domain";
+
+const VALID_DIFFICULTIES: GenerateOptions["difficulty"][] = [
+  "easy",
+  "medium",
+  "hard",
+  "mixed",
+];
+
+const SCHEMA_MAP = {
+  exam: ExamSchema,
+  quiz: QuizSchema,
+  flashcards: FlashcardSetSchema,
+} as const;
 
 export type GenerateInput = {
   subjectId: string;
@@ -28,7 +42,13 @@ export async function generateContent(
   input: GenerateInput
 ): Promise<{ id: string } | { error: string }> {
   if (!AI_CONTENT_TYPES.includes(input.type)) return { error: "Invalid type." };
+  if (!VALID_DIFFICULTIES.includes(input.difficulty))
+    return { error: "Invalid difficulty." };
   const count = Math.min(Math.max(Math.round(input.count) || 10, 1), 50);
+  const totalMarks =
+    input.type === "exam"
+      ? Math.min(Math.max(Math.round(input.totalMarks ?? count * 5) || count * 5, 5), 500)
+      : undefined;
 
   const { supabase, user } = await requireUser();
 
@@ -81,12 +101,22 @@ export async function generateContent(
       options: {
         count,
         difficulty: input.difficulty,
-        totalMarks: input.totalMarks,
+        totalMarks,
       },
     }));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Generation failed.";
     return { error: `AI generation failed: ${message}` };
+  }
+
+  // Validate AI output before persisting — structured outputs should always
+  // match, but this guards against schema drift between generation and storage.
+  const schemaResult = SCHEMA_MAP[input.type].safeParse(json);
+  if (!schemaResult.success) {
+    return {
+      error:
+        "Generated content didn't match the expected format. Please try again.",
+    };
   }
 
   const sourceIds = [...contentDocs, ...styleDocs].map((d) => d.id);

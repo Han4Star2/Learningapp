@@ -155,7 +155,10 @@ export function GeneratePanel({
                   min={1}
                   max={50}
                   value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10);
+                    setCount(Number.isFinite(n) ? n : count);
+                  }}
                   disabled={pending}
                 />
               </div>
@@ -168,7 +171,10 @@ export function GeneratePanel({
                     min={5}
                     max={500}
                     value={totalMarks}
-                    onChange={(e) => setTotalMarks(Number(e.target.value))}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      setTotalMarks(Number.isFinite(n) ? n : totalMarks);
+                    }}
                     disabled={pending}
                   />
                 </div>

@@ -5,6 +5,7 @@ export const translations = {
     // Sidebar nav
     dashboard:    "Dashboard",
     upload:       "Hochladen",
+    create:       "Erstellen",
     teachers:     "Lehrer",
     subjects:     "Fächer",
     logout:       "Abmelden",
@@ -42,6 +43,7 @@ export const translations = {
     // Sidebar nav
     dashboard:    "Dashboard",
     upload:       "Upload",
+    create:       "Create",
     teachers:     "Teachers",
     subjects:     "Subjects",
     logout:       "Log out",

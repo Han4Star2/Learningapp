@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, LogOut, GraduationCap, Upload,
-  Settings, X, Sun, Moon, Check,
+  Settings, X, Sun, Moon, Check, Wand2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SUBJECT_COLOR_CLASSES } from "@/lib/subject-colors";
@@ -206,6 +206,9 @@ export function Sidebar({
         </NavItem>
         <NavItem href="/upload" active={pathname === "/upload"} icon={Upload} onClick={onClose}>
           {t("upload")}
+        </NavItem>
+        <NavItem href="/create" active={pathname === "/create"} icon={Wand2} onClick={onClose}>
+          {t("create")}
         </NavItem>
         <NavItem href="/teachers" active={pathname === "/teachers"} icon={Users} onClick={onClose}>
           {t("teachers")}

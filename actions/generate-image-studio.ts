@@ -38,7 +38,6 @@ export async function generateStudioImage(input: {
         prompt,
         n: 1,
         size: "1024x1024", // edit endpoint only supports square
-        response_format: "b64_json",
       } as Parameters<typeof openai.images.edit>[0]) as import("openai/resources/images").ImagesResponse;
 
       b64 = response.data?.[0]?.b64_json ?? undefined;
@@ -49,7 +48,6 @@ export async function generateStudioImage(input: {
         prompt,
         n: 1,
         size,
-        response_format: "b64_json",
       });
 
       b64 = response.data?.[0]?.b64_json ?? undefined;
